@@ -9,7 +9,7 @@ import './index.css';
 function Square(props){
   return (
     <button
-      className = "square"
+      className = "square" // classNameを定義してcssで装飾する
       onClick = {props.onClick} // 関数を関数で置き換えているみたいね
     >
       {props.value}
@@ -17,56 +17,47 @@ function Square(props){
   );
 }
 
-/*
-class Square extends React.Component {
-    render() {
-      return (
-        <button
-          className="square"
-          onClick = {() => { this.props.onClick(); } }
-        >
-          {this.props.value // 情報をpropsで受け取る }
-        </button>
-      );
-    }
+class Board extends React.Component {
+  /* constructorを削除 */
+  renderSquare(i) {
+    return (
+      <Square
+        value = {this.props.squares[i]}
+        onClick = {() => this.props.onClick(i)}
+      />
+    ); // value = {i}とすることでvalueが渡される
   }
-*/
-  class Board extends React.Component {
-    /* constructorを削除 */
-    renderSquare(i) {
-      return (
-        <Square
-          value = {this.props.squares[i]}
-          onClick = {() => this.props.onClick(i)}
-        />
-      ); // value = {i}とすることでvalueが渡される
-    }
-    // なるほど複数渡すときは半角スペース区切りなのね
-  
-    render() {
-      /* Gameコンポーネントで表示するように仕様変更 */
-      return (
-        <div>
-          <div className="board-row">
-            {this.renderSquare(0)}
-            {this.renderSquare(1)}
-            {this.renderSquare(2)}
-          </div>
-          <div className="board-row">
-            {this.renderSquare(3)}
-            {this.renderSquare(4)}
-            {this.renderSquare(5)}
-          </div>
-          <div className="board-row">
-            {this.renderSquare(6)}
-            {this.renderSquare(7)}
-            {this.renderSquare(8)}
-          </div>
+  // なるほど複数渡すときは半角スペース区切りなのね
+
+  render() {
+    /* Gameコンポーネントで表示するように仕様変更 */
+    /* ループで書くのは難しい... */
+    return (
+      <div>
+        <div className="board-row">
+          {this.renderSquare(0)}
+          {this.renderSquare(1)}
+          {this.renderSquare(2)}
         </div>
-      );
-    }
+        <div className="board-row">
+          {this.renderSquare(3)}
+          {this.renderSquare(4)}
+          {this.renderSquare(5)}
+        </div>
+        <div className="board-row">
+          {this.renderSquare(6)}
+          {this.renderSquare(7)}
+          {this.renderSquare(8)}
+        </div>
+      </div>
+    );
   }
-  
+}
+
+// ああそうか
+// historyの各成分が情報持ってなかったわ。...
+// reverseをonoffする感じ
+
   class Game extends React.Component {
     constructor(props){
       super(props);
@@ -74,10 +65,12 @@ class Square extends React.Component {
       this.state = {
         history: [{
           squares: Array(9).fill(null),
-          hand: null
+          hand: null,
+          stepId:0
         }],
         stepNumber:0,
-        xIsNext: true
+        xIsNext: true,
+        reverse: false
       }
     }
     handleClick(i){
@@ -95,7 +88,8 @@ class Square extends React.Component {
       this.setState({
         history: history.concat([{ // concatは元の配列をmutateしない. pushでは無くこれを使うと。
           squares: squares,
-          hand: currentHand
+          hand: currentHand,
+          stepId: history.length
         }]),
         stepNumber: history.length,
         xIsNext: !playerIsX
@@ -107,8 +101,14 @@ class Square extends React.Component {
         xIsNext: (step % 2) === 0
       });
     }
+    inverse(flag){
+      // 並び順を逆にする
+      this.setState({
+        reverse: !flag
+      });
+    }
     render() {
-      const history = this.state.history;
+      let history = this.state.history.slice();
       const current = history[this.state.stepNumber];
       const winner = calculateWinner(current.squares);
 
@@ -120,8 +120,17 @@ class Square extends React.Component {
         return <li key = {eachMove}>{handInfo}</li> // keyが必要だそうで...追加です。
       });
 
+      // やったことその1: historyを逆順にする
+      if(this.state.reverse){
+        history.sort((h1, h2) => h1.stepId - h2.stepId);
+      }
+  
       const moves = history.map((step, move) => {
         // descはdescriptionの意味でよく用いられますね
+        // やったことその2: moveの順番を逆にする。この2つだけ。
+        if(this.state.reverse){
+          move = history.length - 1 - move;
+        }
         const desc = move ? 
           'Go to move #' + move:
           'Go to game start';
@@ -170,11 +179,12 @@ class Square extends React.Component {
           <div className="game-board">
             <Board
               squares = {current.squares}
-              onClick = {(i) => this.handleClick(i)}
+              onClick = {i => this.handleClick(i)}
             />
           </div>
           <div className="game-info">
             <div>{status}</div>
+            <button onClick = {() => this.inverse(this.state.reverse)}>順番を反転させる</button>
             <ol>{moves}</ol>
           </div>
         </div>
