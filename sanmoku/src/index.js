@@ -34,26 +34,23 @@ class Board extends React.Component {
   render() {
     /* Gameコンポーネントで表示するように仕様変更 */
     /* ループで書くのは難しい... */
-    //const rIndices = [0, 1, 2];
+    const rIndices = [0, 1, 2];
     const cIndices = [0, 1, 2];
-    //const rowSquares = cIndices.map((step, index) => {
-    //  return this.renderSquare(index);
-    //});
     return (
       <div>
-        <div className="board-row">
-          {cIndices.map((index) => this.renderSquare(index))}
-        </div>
-        <div className="board-row">
-          {cIndices.map((index) => this.renderSquare(index+3))}
-        </div>
-        <div className="board-row">
-          {cIndices.map((index) => this.renderSquare(index+6))}
-        </div>
+        {rIndices.map((rIndex) => (
+          <div className="board-row" key = {rIndex}>
+            {cIndices.map((cIndex) => this.renderSquare(rIndex*3 + cIndex))}
+          </div>
+        ))}
       </div>
     );
   }
 }
+// 細かいことをいうとkeyにindexを使うのは推奨されないとか
+// ただ今回要素が動かないのでそれでも問題ないですね。今回はね。
+// 詳しくは：https://zenn.dev/luvmini511/articles/f7b22d93e9c182 を参照してください。
+// 疲れた！！
 
 // ああそうか
 // historyの各成分が情報持ってなかったわ。...
