@@ -11,6 +11,7 @@ function Square(props){
     <button
       className = "square" // classNameを定義してcssで装飾する
       onClick = {props.onClick} // 関数を関数で置き換えているみたいね
+      style = {{background: props.bgColor}}
     >
       {props.value}
     </button> // 内部に表示内容を書く
@@ -19,13 +20,14 @@ function Square(props){
 
 class Board extends React.Component {
   /* constructorを削除 */
-  renderSquare(i) {
+  renderSquare(i, colName) {
     return (
       <Square
         value = {this.props.squares[i]}
         onClick = {() => this.props.onClick(i)}
         key = {i} // こっちに！！！！！keyを！！！！書けって！！！！最初から！！！言えよ！！！！！
         // reference:https://ja.reactjs.org/docs/lists-and-keys.html
+        bgColor = {colName}
       />
     ); // value = {i}とすることでvalueが渡される
   }
@@ -36,11 +38,20 @@ class Board extends React.Component {
     /* ループで書くのは難しい... */
     const rIndices = [0, 1, 2];
     const cIndices = [0, 1, 2];
+    // 勝利マスの番号を渡してそれと一致するなら...って感じで。
+    let colNames = [];
+    for(let i = 0; i < 9; i++){
+      if(this.props.cellInfo[i]){
+        colNames.push('#fc9');
+      }else{
+        colNames.push('#fff');
+      }
+    }
     return (
       <div>
         {rIndices.map((rIndex) => (
           <div className="board-row" key = {rIndex}>
-            {cIndices.map((cIndex) => this.renderSquare(rIndex*3 + cIndex))}
+            {cIndices.map((cIndex) => this.renderSquare(rIndex*3 + cIndex, colNames[rIndex*3 + cIndex]))}
           </div>
         ))}
       </div>
@@ -77,7 +88,7 @@ class Board extends React.Component {
       const current = history[history.length - 1];
       const squares = current.squares.slice(); // コピーを作っている！（指定しないsliceで）
       // 決着がついてる場合、もしくはクリックしたsquareが描画済みの場合は早期にreturnする
-      if(calculateWinner(squares) || squares[i]){
+      if(calculateWinner(squares).winner || squares[i]){
         return;
       }
       squares[i] = (this.state.xIsNext ? 'X' : 'O');
@@ -108,7 +119,9 @@ class Board extends React.Component {
     render() {
       let history = this.state.history.slice();
       const current = history[this.state.stepNumber];
-      const winner = calculateWinner(current.squares);
+      const winnerInfo = calculateWinner(current.squares);
+      const winner = winnerInfo.winner;
+      const cellInfo = winnerInfo.cellInfo;
 
       // 現在の手までの履歴表示
       const historyUntilCurrent = this.state.history.slice(1, this.state.stepNumber+1);
@@ -171,6 +184,9 @@ class Board extends React.Component {
         status = 'Winner ' + winner;
       }else{
         status = 'Next player: ' + (this.state.xIsNext ? 'X' : 'O');
+        if(this.state.stepNumber === 9){
+          status = 'Draw.' // ひきわけ～
+        }
       }
       return (
         <div className="game">
@@ -178,6 +194,7 @@ class Board extends React.Component {
             <Board
               squares = {current.squares}
               onClick = {i => this.handleClick(i)}
+              cellInfo = {cellInfo}
             />
           </div>
           <div className="game-info">
@@ -207,12 +224,16 @@ class Board extends React.Component {
       [0, 4, 8],
       [2, 4, 6],
     ];
+
+    let winner = null;
+    let cellInfo = new Array(9).fill(0);
+
     for (let i = 0; i < lines.length; i++) {
       const [a, b, c] = lines[i];
       if (squares[a] && squares[a] === squares[b] && squares[a] === squares[c]) {
-        return squares[a];
+        winner = squares[a];
+        cellInfo[a] = 1; cellInfo[b] = 1; cellInfo[c] = 1;
       }
     }
-    return null;
+    return {winner:winner, cellInfo:cellInfo};
   }
-  
