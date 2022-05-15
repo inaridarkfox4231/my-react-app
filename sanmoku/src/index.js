@@ -24,6 +24,8 @@ class Board extends React.Component {
       <Square
         value = {this.props.squares[i]}
         onClick = {() => this.props.onClick(i)}
+        key = {i} // こっちに！！！！！keyを！！！！書けって！！！！最初から！！！言えよ！！！！！
+        // reference:https://ja.reactjs.org/docs/lists-and-keys.html
       />
     ); // value = {i}とすることでvalueが渡される
   }
@@ -32,22 +34,21 @@ class Board extends React.Component {
   render() {
     /* Gameコンポーネントで表示するように仕様変更 */
     /* ループで書くのは難しい... */
+    //const rIndices = [0, 1, 2];
+    const cIndices = [0, 1, 2];
+    //const rowSquares = cIndices.map((step, index) => {
+    //  return this.renderSquare(index);
+    //});
     return (
       <div>
         <div className="board-row">
-          {this.renderSquare(0)}
-          {this.renderSquare(1)}
-          {this.renderSquare(2)}
+          {cIndices.map((index) => this.renderSquare(index))}
         </div>
         <div className="board-row">
-          {this.renderSquare(3)}
-          {this.renderSquare(4)}
-          {this.renderSquare(5)}
+          {cIndices.map((index) => this.renderSquare(index+3))}
         </div>
         <div className="board-row">
-          {this.renderSquare(6)}
-          {this.renderSquare(7)}
-          {this.renderSquare(8)}
+          {cIndices.map((index) => this.renderSquare(index+6))}
         </div>
       </div>
     );
